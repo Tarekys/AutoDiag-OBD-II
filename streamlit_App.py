@@ -1,12 +1,14 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
+import requests
 import os
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
 from datetime import datetime
-from predict import preprocess_and_predict_from_df  # استيراد الدالة من predict.py
+
+# تحديد عنوان الـ API (سيتم ضبطه لاحقًا على Railway)
+FASTAPI_URL = os.getenv("FASTAPI_URL", "http://127.0.0.1:8000/predict/")
 
 # Streamlit configuration
 st.set_page_config(
@@ -255,7 +257,7 @@ with col2:
     st.markdown("<h2 style='text-align: center;'>File info</h2>", unsafe_allow_html=True)
     if uploaded_file is not None:
         st.success("✅ uploaded successfully!")
-        st.info("The file will be processed for predictions and charts.")
+        st.info("The file will be sent to the API for processing.")
     else:
         st.warning("⚠️ The file has not been uploaded yet!")
 
@@ -264,22 +266,17 @@ st.markdown('</div>', unsafe_allow_html=True)
 # التحقق من رفع الملف
 df = None
 if uploaded_file is not None:
-    with st.spinner("🔄 جاري معالجة الملف وإجراء التنبؤات..."):
+    with st.spinner("🔄 جاري إرسال الملف ومعالجته عبر API..."):
         try:
-            # قراءة الملف المرفوع كـ DataFrame
-            original_data = pd.read_csv(uploaded_file)
+            # إرسال الملف إلى الـ API
+            files = {'file': (uploaded_file.name, uploaded_file, 'text/csv')}
+            response = requests.post(FASTAPI_URL, files=files)
 
-            # التحقق من وجود الأعمدة المطلوبة
-            required_columns = ['Timestamp']  # الأعمدة الأساسية المطلوبة للرسوم البيانية
-            missing_columns = [col for col in required_columns if col not in original_data.columns]
-            if missing_columns:
-                st.error(f"❌ الملف المرفوع يفتقد الأعمدة التالية: {', '.join(missing_columns)}")
-            else:
-                # تشغيل التنبؤ باستخدام الدالة من predict.py
-                predictions, result_data = preprocess_and_predict_from_df(original_data)
-
-                if predictions is not None:
-                    df = result_data  # استخدام البيانات المعادة مع التنبؤات
+            # التحقق من استجابة الـ API
+            if response.status_code == 200:
+                result = response.json()
+                if result.get("status") == "success":
+                    df = pd.DataFrame(result["results"])
                     st.success("✅ تمت المعالجة والتنبؤ بنجاح!")
                     st.subheader("📋 أنواع الأعطال المحتملة الحدوث")
 
@@ -324,10 +321,12 @@ if uploaded_file is not None:
                     else:
                         st.warning("لا توجد نتائج لعرضها.")
                 else:
-                    st.error("❌ حدث خطأ أثناء التنبؤ. تحقق من تنسيق الملف أو السجلات.")
+                    st.error(f"❌ حدث خطأ من الخادم: {result.get('error')}")
+            else:
+                st.error(f"❌ حدث خطأ من الخادم: {response.status_code} - {response.text}")
 
         except Exception as e:
-            st.error(f"❌ حدث خطأ أثناء قراءة الملف أو المعالجة: {str(e)}")
+            st.error(f"❌ حدث خطأ أثناء إرسال الملف أو المعالجة: {str(e)}")
 
 # معالجة الرسوم البيانية فقط إذا كان df موجودًا
 if df is not None:
@@ -809,7 +808,7 @@ if df is not None:
                             if 'MAF_gps' in df.columns and 'Timestamp' in df.columns:
                                 fig = go.Figure()
 
-                                fig.add_trace(go.Scatter(
+                                fig.add_trace(go.Sc芦atter(
                                     x=df['Timestamp'],
                                     y=df['MAF_gps'],
                                     mode='lines',

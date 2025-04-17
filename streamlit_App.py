@@ -1,20 +1,14 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import requests
 import os
-
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
-import seaborn as sns
-import matplotlib.pyplot as plt
 from datetime import datetime
-from io import StringIO
+from predict import preprocess_and_predict_from_df  # استيراد الدالة من predict.py
 
-FASTAPI_URL = "http://127.0.0.1:8000/predict/"
-
-# streamlit configuration
+# Streamlit configuration
 st.set_page_config(
     page_title="Vehicle Dashboard",
     page_icon="⚙",
@@ -22,10 +16,9 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# CSS 
+# CSS (نفس التنسيقات بدون تغيير)
 st.markdown("""
 <style>
-    /* تحسين الخلفية الرئيسية */
     .main {
         background-color: #f0f2f6;
     }
@@ -33,30 +26,26 @@ st.markdown("""
         max-width: 1200px;
         margin: 0 auto;
     }
-    
-    /* تحسين العناوين مع تكبير حجم الخط */
     h1 {
         color: #1e3a8a;
         font-family: 'Cairo', 'Arial', sans-serif;
-        font-size: 2.5rem !important; /* تكبير حجم العنوان الرئيسي */
+        font-size: 2.5rem !important;
     }
     h2 {
         color: #1e3a8a;
         font-family: 'Cairo', 'Arial', sans-serif;
-        font-size: 2rem !important; /* تكبير حجم العنوان الثانوي */
+        font-size: 2rem !important;
     }
     h3 {
         color: #1e3a8a;
         font-family: 'Cairo', 'Arial', sans-serif;
-        font-size: 1.5rem !important; /* تكبير حجم العنوان الثالث */
+        font-size: 1.5rem !important;
     }
     h4 {
         color: #1e3a8a;
         font-family: 'Cairo', 'Arial', sans-serif;
-        font-size: 1.3rem !important; /* تكبير حجم العنوان الرابع */
+        font-size: 1.3rem !important;
     }
-    
-    /* تحسين الهيدر */
     .header-container {
         background-color: #1e3a8a;
         background-image: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
@@ -66,10 +55,8 @@ st.markdown("""
         margin-bottom: 2rem;
         text-align: center;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        font-size: 1.2rem !important; /* تكبير حجم النص في الهيدر */
+        font-size: 1.2rem !important;
     }
-    
-    /* تحسين حاويات المحتوى */
     .upload-container, .chart-container {
         background-color: white;
         padding: 2rem;
@@ -77,10 +64,8 @@ st.markdown("""
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
         margin-bottom: 2rem;
         border-right: 4px solid #3b82f6;
-        font-size: 1.1rem !important; /* تكبير حجم النص في الحاويات */
+        font-size: 1.1rem !important;
     }
-    
-    /* تنسيق الخيارات */
     .chart-option {
         padding: 1rem;
         background-color: #f8f9fa;
@@ -97,30 +82,26 @@ st.markdown("""
     .chart-option h4 {
         color: #1e3a8a;
         margin-bottom: 0.5rem;
-        font-size: 1.3rem !important; /* تكبير حجم العنوان في الخيارات */
+        font-size: 1.3rem !important;
     }
     .chart-option p {
         color: #334155;
-        font-size: 1rem !important; /* تكبير حجم النص في الخيارات */
+        font-size: 1rem !important;
     }
     .selected {
         border: 2px solid #3b82f6;
         background-color: #dbeafe;
     }
-    
-    /* تحسين شبكة الخيارات */
     .chart-options-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
         gap: 1rem;
     }
-    
-    /* تحسين الموسعات */
     .expander-content {
         padding: 15px;
         background-color: #f9fafb;
         border-radius: 5px;
-        font-size: 1.1rem !important; /* تكبير حجم النص في الموسعات */
+        font-size: 1.1rem !important;
     }
     .stExpander {
         background-color: white;
@@ -129,39 +110,31 @@ st.markdown("""
         border: 1px solid #e5e7eb;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     }
-    
-    /* تنسيق عناصر الاختيار مع تكبير حجم الخط */
     .stSelectbox, .stSelectbox > div {
         margin-bottom: 20px;
         color: #1e3a8a !important;
-        font-size: 1.2rem !important; /* تكبير حجم النص في القائمة المنسدلة */
+        font-size: 1.2rem !important;
     }
-    
-    /* تنسيق القوائم المنسدلة مع تحسين الرؤية */
     .stSelectbox > div[data-baseweb="select"] > div {
-        background-color: white !important; /* خلفية بيضاء للقائمة المحددة */
+        background-color: white !important;
         border-color: #d1d5db !important;
-        color: #1e293b !important; /* لون نص داكن للاختيار المحدد */
-        font-size: 1.2rem !important; /* تكبير حجم النص */
+        color: #1e293b !important;
+        font-size: 1.2rem !important;
     }
-    
-    /* تحسين الخيارات داخل القائمة المنسدلة */
     .stSelectbox div[role="listbox"] {
-        background-color: #ffffff !important; /* خلفية بيضاء للخيارات */
+        background-color: #ffffff !important;
         border: 1px solid #d1d5db !important;
     }
     .stSelectbox div[role="option"] {
-        color: #1e293b !important; /* لون نص داكن للخيارات */
-        background-color: #ffffff !important; /* خلفية بيضاء لكل خيار */
-        font-size: 1.2rem !important; /* تكبير حجم النص */
-        padding: 10px !important; /* زيادة الحشوة لتحسين الرؤية */
+        color: #1e293b !important;
+        background-color: #ffffff !important;
+        font-size: 1.2rem !important;
+        padding: 10px !important;
     }
     .stSelectbox div[role="option"]:hover {
-        background-color: #dbeafe !important; /* خلفية عند التحويم */
-        color: #1e3a8a !important; /* لون نص عند التحويم */
+        background-color: #dbeafe !important;
+        color: #1e3a8a !important;
     }
-    
-    /* تحسين الجداول مع تكبير حجم الخط */
     .dataframe {
         font-family: 'Cairo', 'Arial', sans-serif;
         width: 100%;
@@ -172,39 +145,33 @@ st.markdown("""
         color: white;
         padding: 12px 15px;
         text-align: right;
-        font-size: 1.2rem !important; /* تكبير حجم النص في رأس الجدول */
+        font-size: 1.2rem !important;
     }
     .dataframe td {
         padding: 10px 15px;
         border-bottom: 1px solid #e5e7eb;
         text-align: right;
         color: #334155 !important;
-        font-size: 1.1rem !important; /* تكبير حجم النص في خلايا الجدول */
+        font-size: 1.1rem !important;
     }
     .dataframe tr:nth-child(even) {
         background-color: #f9fafb;
     }
-    
-    /* تحسين رأس الموسعات */
     .streamlit-expanderHeader {
         font-weight: bold;
         color: #1e3a8a;
         background-color: #f8fafc;
         border-radius: 5px;
         padding: 8px 12px !important;
-        font-size: 1.2rem !important; /* تكبير حجم النص في رأس الموسعات */
+        font-size: 1.2rem !important;
     }
-    
-    /* تحسين محتوى الموسعات لوضوح النص */
     .streamlit-expanderContent {
         background-color: #ffffff;
         color: #1e293b !important;
         padding: 15px;
         border-radius: 0 0 5px 5px;
-        font-size: 1.1rem !important; /* تكبير حجم النص في محتوى الموسعات */
+        font-size: 1.1rem !important;
     }
-    
-    /* قسم تفاصيل الأعطال */
     .fault-details {
         padding: 15px;
         margin: 10px 0;
@@ -212,10 +179,8 @@ st.markdown("""
         background-color: #ffffff;
         border-right: 4px solid #3b82f6;
         color: #1e293b !important;
-        font-size: 1.1rem !important; /* تكبير حجم النص في تفاصيل الأعطال */
+        font-size: 1.1rem !important;
     }
-    
-    /* تمييز أنواع الأعطال */
     .no-fault {
         border-right-color: #10b981;
     }
@@ -231,40 +196,32 @@ st.markdown("""
     .transmission-fault {
         border-right-color: #ef4444;
     }
-    
-    /* تنسيق النصوص داخل الموسعات */
     .fault-message {
         padding: 10px;
         background-color: #f0f9ff;
         border-radius: 5px;
         margin-top: 10px;
         color: #0c4a6e !important;
-        font-size: 1.1rem !important; /* تكبير حجم النص في الرسائل */
+        font-size: 1.1rem !important;
     }
-    
-    /* تنسيق عام للنصوص للتأكد من وضوحها */
     p, span, div, li {
         color: #1e293b !important;
-        font-size: 1.1rem !important; /* تكبير حجم النص العام */
+        font-size: 1.1rem !important;
     }
-    
-    /* تنسيق الإشعارات */
     .stAlert {
         border-radius: 5px;
-        font-size: 1.1rem !important; /* تكبير حجم النص في الإشعارات */
+        font-size: 1.1rem !important;
     }
-    
-    /* توسيط المخططات البيانية */
     .stChart {
         margin: 0 auto;
     }
 </style>
 """, unsafe_allow_html=True)
 
+# Header
+st.markdown('<div class="header-container"><h1>Vehicle Data Plate ⚙</h1></div>', unsafe_allow_html=True)
 
-st.markdown('<div class="header-container"><h1> Vehicle Data Plate ⚙ </h1></div>', unsafe_allow_html=True)
-
-# # Description of charts
+# Description of charts
 chart_descriptions = {
     "1. Histogram of Engine RPM": "رسم بياني يوضح توزيع دورات المحرك، مع تمييز الدورات العالية والمنخفضة",
     "2. Line Graph of Engine RPM over time": "مخطط زمني يظهر تغيرات دورات المحرك مع الوقت، مع تمييز ملون للدورات العالية",
@@ -285,7 +242,7 @@ chart_descriptions = {
     "17. Line Graph of Ambient Temperature": "مخطط زمني يوضح درجة الحرارة المحيطة بالمركبة"
 }
 
-# upload file section
+# Upload file section
 st.markdown('<div class="upload-container">', unsafe_allow_html=True)
 
 col1, col2 = st.columns([1, 1])
@@ -295,70 +252,83 @@ with col1:
     uploaded_file = st.file_uploader("Upload a file containing vehicle data", type="csv")
 
 with col2:
-    st.markdown("<h2 style='text-align: center;'> File info </h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center;'>File info</h2>", unsafe_allow_html=True)
     if uploaded_file is not None:
         st.success("✅ uploaded successfully!")
-        st.info("FastAPI for prediction processing.")
+        st.info("The file will be processed for predictions and charts.")
     else:
         st.warning("⚠️ The file has not been uploaded yet!")
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-#------------------------------------------------------------------------------
 # التحقق من رفع الملف
 df = None
 if uploaded_file is not None:
-    with st.spinner("🔄 جاري إرسال الملف ومعالجته عبر FastAPI..."):
+    with st.spinner("🔄 جاري معالجة الملف وإجراء التنبؤات..."):
         try:
-            files = {'file': (uploaded_file.name, uploaded_file, 'text/csv')}
-            response = requests.post(FASTAPI_URL, files=files)
+            # قراءة الملف المرفوع كـ DataFrame
+            original_data = pd.read_csv(uploaded_file)
 
-            if response.status_code == 200:
-                result = response.json()
-                df = pd.DataFrame(result["results"])
-
-                st.success("✅ تمت المعالجة بنجاح!")
-                st.subheader("📋 أنواع الأعطال المحتملة الحدوث")
-
-                fault_types = ['كل الأنواع'] + list(df['Predicted_Fault'].unique())
-                selected_fault = st.selectbox("اختر نوع العطل لعرضه:", fault_types)
-
-                if selected_fault != 'كل الأنواع':
-                    filtered_df = df[df['Predicted_Fault'] == selected_fault]
-                else:
-                    filtered_df = df
-
-                # عرض النتائج
-                if not filtered_df.empty:
-                    table_data = []
-                    for idx, row in filtered_df.iterrows():
-                        fault_icon = {
-                            'No Fault': '✅',
-                            'Engine Fault': '⚠️',
-                            'Electrical Fault': '⚠️',
-                            'Emission Fault': '⚠️',
-                            'Transmission Fault': '⚠️'
-                        }.get(row['Predicted_Fault'], '❓')
-
-                        table_data.append({
-                            "Recording": f"{fault_icon} {idx + 1}",
-                            "Possible fault type": row['Predicted_Fault'],
-                            "Attention": row['Prediction_Message'],
-                        })
-
-                    table_df = pd.DataFrame(table_data)
-                    st.dataframe(table_df, use_container_width=True)
-                else:
-                    st.warning("لا توجد نتائج لعرضها.")
+            # التحقق من وجود الأعمدة المطلوبة
+            required_columns = ['Timestamp']  # الأعمدة الأساسية المطلوبة للرسوم البيانية
+            missing_columns = [col for col in required_columns if col not in original_data.columns]
+            if missing_columns:
+                st.error(f"❌ الملف المرفوع يفتقد الأعمدة التالية: {', '.join(missing_columns)}")
             else:
-                st.error(f"حدث خطأ من الخادم: {response.status_code}")
-                st.text(response.text)
+                # تشغيل التنبؤ باستخدام الدالة من predict.py
+                predictions, result_data = preprocess_and_predict_from_df(original_data)
+
+                if predictions is not None:
+                    df = result_data  # استخدام البيانات المعادة مع التنبؤات
+                    st.success("✅ تمت المعالجة والتنبؤ بنجاح!")
+                    st.subheader("📋 أنواع الأعطال المحتملة الحدوث")
+
+                    # عرض التنبؤات
+                    fault_types = ['كل الأنواع'] + list(df['Predicted_Fault'].unique())
+                    selected_fault = st.selectbox("اختر نوع العطل لعرضه:", fault_types)
+
+                    if selected_fault != 'كل الأنواع':
+                        filtered_df = df[df['Predicted_Fault'] == selected_fault]
+                    else:
+                        filtered_df = df
+
+                    # عرض النتائج
+                    if not filtered_df.empty:
+                        table_data = []
+                        for idx, row in filtered_df.iterrows():
+                            fault_icon = {
+                                'No Fault': '✅',
+                                'Engine Fault': '⚠️',
+                                'Electrical Fault': '⚠️',
+                                'Emission Fault': '⚠️',
+                                'Transmission Fault': '⚠️'
+                            }.get(row['Predicted_Fault'], '❓')
+
+                            table_data.append({
+                                "Recording": f"{fault_icon} {idx + 1}",
+                                "Possible fault type": row['Predicted_Fault'],
+                                "Attention": row['Prediction_Message'],
+                            })
+
+                        table_df = pd.DataFrame(table_data)
+                        st.dataframe(table_df, use_container_width=True)
+
+                        # زر لتحميل النتائج كملف CSV
+                        csv = table_df.to_csv(index=False)
+                        st.download_button(
+                            label="تحميل النتائج كملف CSV",
+                            data=csv,
+                            file_name="fault_predictions.csv",
+                            mime="text/csv"
+                        )
+                    else:
+                        st.warning("لا توجد نتائج لعرضها.")
+                else:
+                    st.error("❌ حدث خطأ أثناء التنبؤ. تحقق من تنسيق الملف أو السجلات.")
 
         except Exception as e:
-            st.error("❌ حدث خطأ أثناء إرسال الملف أو المعالجة.")
-            st.text(str(e))
+            st.error(f"❌ حدث خطأ أثناء قراءة الملف أو المعالجة: {str(e)}")
 
-#
 # معالجة الرسوم البيانية فقط إذا كان df موجودًا
 if df is not None:
     try:
@@ -369,17 +339,17 @@ if df is not None:
                 df['Date'] = df['Timestamp'].dt.date
             except:
                 st.warning("خطأ في تحويل Timestamp إلى تنسيق التاريخ")
-        
-        st.markdown("<h2 style='text-align: center;'> --Select the charts you want to view-- </h2>", unsafe_allow_html=True)
+
+        st.markdown("<h2 style='text-align: center;'>--Select the charts you want to view--</h2>", unsafe_allow_html=True)
 
         st.markdown('<div class="chart-options-grid">', unsafe_allow_html=True)
-        
+
         selected_charts = {}
-        
+
         col_count = 3  # عدد الأعمدة في كل صف
         chart_items = list(chart_descriptions.items())
         rows = [chart_items[i:i+col_count] for i in range(0, len(chart_items), col_count)]
-        
+
         for row in rows:
             cols = st.columns(col_count)
             for i, (chart_name, chart_desc) in enumerate(row):
@@ -391,29 +361,28 @@ if df is not None:
                     </div>
                     """, unsafe_allow_html=True)
                     selected_charts[chart_name] = st.checkbox("عرض", key=f"chart_{chart_name}")
-        
+
         st.markdown('</div>', unsafe_allow_html=True)
-        
+
         if any(selected_charts.values()):
             st.markdown("<h2 style='text-align: center;'>Charts of Vehicle</h2>", unsafe_allow_html=True)
 
             charts_to_show = [chart for chart, selected in selected_charts.items() if selected]
             rows = [charts_to_show[i:i+2] for i in range(0, len(charts_to_show), 2)]
-            
+
             for row in rows:
                 cols = st.columns([1, 1])
                 for i, chart_name in enumerate(row):
                     with cols[i]:
-                        st.markdown(f'<div class="chart-container"><h3>{chart_name}</h3>', unsafe_allow_html=True)      
-## الرسم البياني حسب النوع
-##--------------------------------------------------------------  
+                        st.markdown(f'<div class="chart-container"><h3>{chart_name}</h3>', unsafe_allow_html=True)
 
+                        # الرسم البياني حسب النوع
                         if chart_name == "1. Histogram of Engine RPM":
                             if 'Engine_RPM' in df.columns:
                                 rpm_threshold = 6000
                                 normal_rpm = df[df['Engine_RPM'] <= rpm_threshold]
                                 high_rpm = df[df['Engine_RPM'] > rpm_threshold]
-                                
+
                                 fig = go.Figure()
                                 fig.add_trace(go.Histogram(
                                     x=normal_rpm['Engine_RPM'],
@@ -429,7 +398,7 @@ if df is not None:
                                     marker_color='red',
                                     opacity=0.75
                                 ))
-                                
+
                                 fig.update_layout(
                                     title='توزيع دورات المحرك',
                                     xaxis_title='دورات المحرك (RPM)',
@@ -442,17 +411,17 @@ if df is not None:
                                 st.plotly_chart(fig, use_container_width=True)
                             else:
                                 st.error("عمود Engine_RPM غير موجود في البيانات")
-       
+
                         elif chart_name == "2. Line Graph of Engine RPM over time":
                             if 'Engine_RPM' in df.columns and 'Timestamp' in df.columns:
                                 traces = []
-                                
+
                                 for i in range(len(df) - 1):
                                     x_segment = [df["Timestamp"].iloc[i], df["Timestamp"].iloc[i+1]]
                                     y_segment = [df["Engine_RPM"].iloc[i], df["Engine_RPM"].iloc[i+1]]
-                                    
+
                                     color = 'orangered' if y_segment[0] > 6500 or y_segment[1] > 6500 else 'seagreen'
-                                    
+
                                     traces.append(go.Scatter(
                                         x=x_segment,
                                         y=y_segment,
@@ -460,7 +429,7 @@ if df is not None:
                                         line=dict(color=color, width=3),
                                         showlegend=False
                                     ))
-                                
+
                                 fig = go.Figure(data=traces)
                                 fig.update_layout(
                                     title="دورات المحرك عبر الزمن",
@@ -473,30 +442,30 @@ if df is not None:
                                     template="plotly_white",
                                     height=400
                                 )
-                                
+
                                 fig.update_xaxes(showgrid=True, gridcolor='lightgrey')
                                 fig.update_yaxes(showgrid=True, gridcolor='lightgrey')
-                                
+
                                 st.plotly_chart(fig, use_container_width=True)
                             else:
                                 st.error("بعض الأعمدة المطلوبة غير موجودة في البيانات")
-                        
+
                         elif chart_name == "3. Line Graph of Coolant Temperature":
                             if 'Coolant_Temp_C' in df.columns and 'Timestamp' in df.columns and 'Date' in df.columns:
                                 unique_days = df['Date'].unique()
-                                
+
                                 if len(unique_days) > 0:
                                     day = unique_days[0]  # عرض اليوم الأول فقط
                                     day_data = df[df['Date'] == day].sort_values('Timestamp')
-                                    
+
                                     fig = go.Figure()
-                                    
+
                                     for i in range(len(day_data) - 1):
                                         x_segment = [day_data['Timestamp'].iloc[i], day_data['Timestamp'].iloc[i+1]]
                                         y_segment = [day_data['Coolant_Temp_C'].iloc[i], day_data['Coolant_Temp_C'].iloc[i+1]]
-                                        
+
                                         color = 'orangered' if y_segment[0] > 105 or y_segment[1] > 105 else 'seagreen'
-                                        
+
                                         fig.add_trace(go.Scatter(
                                             x=x_segment,
                                             y=y_segment,
@@ -504,7 +473,7 @@ if df is not None:
                                             line=dict(color=color, width=3),
                                             showlegend=False
                                         ))
-                                    
+
                                     fig.add_shape(
                                         type='line',
                                         x0=day_data['Timestamp'].min(),
@@ -513,7 +482,7 @@ if df is not None:
                                         y1=105,
                                         line=dict(color='red', width=2, dash='dash'),
                                     )
-                                    
+
                                     fig.update_layout(
                                         title=f'درجة حرارة سائل التبريد بتاريخ {day}',
                                         xaxis_title='الوقت',
@@ -522,20 +491,20 @@ if df is not None:
                                         template='plotly_white',
                                         height=400,
                                     )
-                                    
+
                                     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
                                     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
-                                    
+
                                     st.plotly_chart(fig, use_container_width=True)
                                 else:
                                     st.error("لم يتم العثور على بيانات التاريخ")
                             else:
                                 st.error("بعض الأعمدة المطلوبة غير موجودة في البيانات")
-                        
+
                         elif chart_name == "4. Histogram of Oil Temperature":
                             if 'Oil_Temp_C' in df.columns:
                                 fig = go.Figure()
-                                
+
                                 fig.add_trace(go.Histogram(
                                     x=df['Oil_Temp_C'],
                                     nbinsx=30,
@@ -543,7 +512,7 @@ if df is not None:
                                     opacity=0.6,
                                     name='توزيع درجة حرارة الزيت'
                                 ))
-                                
+
                                 fig.add_shape(
                                     type='line',
                                     x0=df['Oil_Temp_C'].mean(),
@@ -554,7 +523,7 @@ if df is not None:
                                     line=dict(color='blue', width=2, dash='dash'),
                                     name='المتوسط'
                                 )
-                                
+
                                 fig.add_shape(
                                     type='line',
                                     x0=df['Oil_Temp_C'].median(),
@@ -565,7 +534,7 @@ if df is not None:
                                     line=dict(color='green', width=2, dash='dash'),
                                     name='الوسيط'
                                 )
-                                
+
                                 fig.update_layout(
                                     title='توزيع درجة حرارة الزيت (°C)',
                                     xaxis_title='درجة حرارة الزيت (°C)',
@@ -578,7 +547,7 @@ if df is not None:
                                         title_text=''
                                     )
                                 )
-                                
+
                                 fig.add_annotation(
                                     x=df['Oil_Temp_C'].mean(),
                                     y=0.95,
@@ -589,7 +558,7 @@ if df is not None:
                                     ax=50,
                                     ay=-30
                                 )
-                                
+
                                 fig.add_annotation(
                                     x=df['Oil_Temp_C'].median(),
                                     y=0.85,
@@ -600,21 +569,21 @@ if df is not None:
                                     ax=-50,
                                     ay=-30
                                 )
-                                
+
                                 st.plotly_chart(fig, use_container_width=True)
                             else:
                                 st.error("عمود Oil_Temp_C غير موجود في البيانات")
-                        
+
                         elif chart_name == "5. Line Graph of Oil Temperature":
                             if 'Oil_Temp_C' in df.columns and 'Timestamp' in df.columns and 'Date' in df.columns:
                                 unique_days = df['Date'].unique()
-                                
+
                                 if len(unique_days) > 0:
                                     day = unique_days[0]  # عرض اليوم الأول فقط
                                     day_data = df[df['Date'] == day].sort_values('Timestamp')
-                                    
+
                                     fig = go.Figure()
-                                    
+
                                     fig.add_trace(
                                         go.Scatter(
                                             x=day_data['Timestamp'],
@@ -624,7 +593,7 @@ if df is not None:
                                             name='درجة حرارة الزيت'
                                         )
                                     )
-                                    
+
                                     fig.update_layout(
                                         title=f'درجة حرارة الزيت (°C) بتاريخ {day}',
                                         xaxis_title='الوقت',
@@ -633,20 +602,20 @@ if df is not None:
                                         template='plotly_white',
                                         height=400,
                                     )
-                                    
+
                                     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
                                     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
-                                    
+
                                     st.plotly_chart(fig, use_container_width=True)
                                 else:
                                     st.error("لم يتم العثور على بيانات التاريخ")
                             else:
                                 st.error("بعض الأعمدة المطلوبة غير موجودة في البيانات")
-                                
+
                         elif chart_name == "6. Line Graph of Engine RPM and Oil Temperature":
                             if all(col in df.columns for col in ['Engine_RPM', 'Oil_Temp_C', 'Timestamp']):
                                 fig = make_subplots(specs=[[{"secondary_y": True}]])
-                                
+
                                 fig.add_trace(
                                     go.Scatter(
                                         x=df["Timestamp"],
@@ -658,7 +627,7 @@ if df is not None:
                                     ),
                                     secondary_y=False
                                 )
-                                
+
                                 fig.add_trace(
                                     go.Scatter(
                                         x=df["Timestamp"],
@@ -670,7 +639,7 @@ if df is not None:
                                     ),
                                     secondary_y=True
                                 )
-                                
+
                                 fig.update_layout(
                                     title="العلاقة بين دورات المحرك ودرجة حرارة الزيت",
                                     xaxis_title="الوقت",
@@ -684,21 +653,21 @@ if df is not None:
                                         x=1
                                     )
                                 )
-                                
+
                                 fig.update_yaxes(title_text="دورات المحرك (RPM)", secondary_y=False, color="darkgreen")
                                 fig.update_yaxes(title_text="درجة حرارة الزيت (°C)", secondary_y=True, color="darkorange")
-                                
+
                                 fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
                                 fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
-                                
+
                                 st.plotly_chart(fig, use_container_width=True)
                             else:
                                 st.error("بعض الأعمدة المطلوبة غير موجودة في البيانات")
-                        
+
                         elif chart_name == "7. Line Graph of Engine Load Percent & RPM":
                             if all(col in df.columns for col in ['Engine_RPM', 'Engine_Load_Percent', 'Timestamp']):
                                 fig = make_subplots(specs=[[{"secondary_y": True}]])
-                                
+
                                 fig.add_trace(
                                     go.Scatter(
                                         x=df["Timestamp"],
@@ -709,7 +678,7 @@ if df is not None:
                                     ),
                                     secondary_y=False
                                 )
-                                
+
                                 fig.add_trace(
                                     go.Scatter(
                                         x=df["Timestamp"],
@@ -720,7 +689,7 @@ if df is not None:
                                     ),
                                     secondary_y=True
                                 )
-                                
+
                                 fig.update_layout(
                                     title="العلاقة بين دورات المحرك ونسبة الحمل",
                                     xaxis_title="الوقت",
@@ -734,21 +703,21 @@ if df is not None:
                                         x=1
                                     )
                                 )
-                                
+
                                 fig.update_yaxes(title_text="دورات المحرك (RPM)", secondary_y=False, color="chocolate")
                                 fig.update_yaxes(title_text="نسبة حمل المحرك (%)", secondary_y=True, color="blue")
-                                
+
                                 fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
                                 fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
-                                
+
                                 st.plotly_chart(fig, use_container_width=True)
                             else:
                                 st.error("بعض الأعمدة المطلوبة غير موجودة في البيانات")
-                                
+
                         elif chart_name == "8. Histogram of Battery Voltage":
                             if 'Battery_Voltage_V' in df.columns:
                                 fig = go.Figure()
-                                
+
                                 fig.add_trace(go.Histogram(
                                     x=df['Battery_Voltage_V'],
                                     nbinsx=30,
@@ -756,7 +725,7 @@ if df is not None:
                                     opacity=0.75,
                                     name='توزيع جهد البطارية'
                                 ))
-                                
+
                                 fig.update_layout(
                                     title="توزيع جهد البطارية",
                                     xaxis_title="جهد البطارية (فولت)",
@@ -764,21 +733,21 @@ if df is not None:
                                     template="plotly_white",
                                     height=400
                                 )
-                                
+
                                 st.plotly_chart(fig, use_container_width=True)
                             else:
                                 st.error("عمود Battery_Voltage_V غير موجود في البيانات")
-                                
+
                         elif chart_name == "9. Line Graph of Battery Voltage":
                             if 'Battery_Voltage_V' in df.columns and 'Timestamp' in df.columns and 'Date' in df.columns:
                                 unique_days = df['Date'].unique()
-                                
+
                                 if len(unique_days) > 0:
                                     day = unique_days[0]  # عرض اليوم الأول فقط
                                     day_data = df[df['Date'] == day].sort_values('Timestamp')
-                                    
+
                                     fig = go.Figure()
-                                    
+
                                     fig.add_trace(
                                         go.Scatter(
                                             x=day_data['Timestamp'],
@@ -788,7 +757,7 @@ if df is not None:
                                             name='جهد البطارية'
                                         )
                                     )
-                                    
+
                                     fig.update_layout(
                                         title=f'جهد البطارية بتاريخ {day}',
                                         xaxis_title='الوقت',
@@ -797,20 +766,20 @@ if df is not None:
                                         template='plotly_white',
                                         height=400,
                                     )
-                                    
+
                                     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
                                     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
-                                    
+
                                     st.plotly_chart(fig, use_container_width=True)
                                 else:
                                     st.error("لم يتم العثور على بيانات التاريخ")
                             else:
                                 st.error("بعض الأعمدة المطلوبة غير موجودة في البيانات")
-                                
+
                         elif chart_name == "10. Line Graph of Manifold Absolute Pressure":
                             if 'MAP_kPa' in df.columns and 'Timestamp' in df.columns:
                                 fig = go.Figure()
-                                
+
                                 fig.add_trace(go.Scatter(
                                     x=df['Timestamp'],
                                     y=df['MAP_kPa'],
@@ -819,7 +788,7 @@ if df is not None:
                                     line=dict(width=3, color='purple'),
                                     name='ضغط مشعب السحب'
                                 ))
-                                
+
                                 fig.update_layout(
                                     title="ضغط الهواء داخل مشعب السحب (MAP_kPa)",
                                     xaxis_title="الوقت",
@@ -828,10 +797,10 @@ if df is not None:
                                     height=400,
                                     xaxis=dict(tickangle=45)
                                 )
-                                
+
                                 fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
                                 fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
-                                
+
                                 st.plotly_chart(fig, use_container_width=True)
                             else:
                                 st.error("عمود MAP_kPa غير موجود في البيانات")
@@ -839,7 +808,7 @@ if df is not None:
                         elif chart_name == "11. Line Graph of Mass Air Flow":
                             if 'MAF_gps' in df.columns and 'Timestamp' in df.columns:
                                 fig = go.Figure()
-                                
+
                                 fig.add_trace(go.Scatter(
                                     x=df['Timestamp'],
                                     y=df['MAF_gps'],
@@ -848,7 +817,7 @@ if df is not None:
                                     line=dict(width=3, color='green'),
                                     name='تدفق كتلة الهواء'
                                 ))
-                                
+
                                 fig.update_layout(
                                     title="💨 تدفق كتلة الهواء (جرام/ثانية)",
                                     xaxis_title="الوقت",
@@ -857,10 +826,10 @@ if df is not None:
                                     height=400,
                                     xaxis=dict(tickangle=45)
                                 )
-                                
+
                                 fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
                                 fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
-                                
+
                                 st.plotly_chart(fig, use_container_width=True)
                             else:
                                 st.error("عمود MAF_gps غير موجود في البيانات")
@@ -881,12 +850,12 @@ if df is not None:
                                         "MAF_gps": "تدفق كتلة الهواء (جرام/ثانية)"
                                     }
                                 )
-                                
+
                                 fig.update_layout(
                                     height=600,
                                     template="plotly_white"
                                 )
-                                
+
                                 st.plotly_chart(fig, use_container_width=True)
                             else:
                                 st.error("بعض الأعمدة المطلوبة غير موجودة في البيانات")
@@ -894,7 +863,7 @@ if df is not None:
                         elif chart_name == "13. Line Graph of Exhaust Gas Recirculation":
                             if 'EGR_Status' in df.columns and 'Timestamp' in df.columns:
                                 fig = go.Figure()
-                                
+
                                 fig.add_trace(go.Scatter(
                                     x=df['Timestamp'],
                                     y=df['EGR_Status'],
@@ -903,7 +872,7 @@ if df is not None:
                                     line=dict(width=3, color='royalblue'),
                                     name='حالة EGR'
                                 ))
-                                
+
                                 fig.update_layout(
                                     title="حالة نظام إعادة تدوير غاز العادم (EGR)",
                                     xaxis_title="الوقت",
@@ -912,10 +881,10 @@ if df is not None:
                                     height=400,
                                     xaxis=dict(tickangle=45)
                                 )
-                                
+
                                 fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
                                 fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
-                                
+
                                 st.plotly_chart(fig, use_container_width=True)
                             else:
                                 st.error("عمود EGR_Status غير موجود في البيانات")
@@ -923,7 +892,7 @@ if df is not None:
                         elif chart_name == "14. Line Graph of Catalytic Converter Efficiency":
                             if 'Catalytic_Converter_Percent' in df.columns and 'Timestamp' in df.columns:
                                 fig = go.Figure()
-                                
+
                                 fig.add_trace(go.Scatter(
                                     x=df['Timestamp'],
                                     y=df['Catalytic_Converter_Percent'],
@@ -932,7 +901,7 @@ if df is not None:
                                     line=dict(width=3, color='teal'),
                                     name='كفاءة المحول الحفاز'
                                 ))
-                                
+
                                 fig.update_layout(
                                     title="كفاءة عمل المحول الحفاز",
                                     xaxis_title="الوقت",
@@ -941,10 +910,10 @@ if df is not None:
                                     height=400,
                                     xaxis=dict(tickangle=45)
                                 )
-                                
+
                                 fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
                                 fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
-                                
+
                                 st.plotly_chart(fig, use_container_width=True)
                             else:
                                 st.error("عمود Catalytic_Converter_Percent غير موجود في البيانات")
@@ -952,7 +921,7 @@ if df is not None:
                         elif chart_name == "15. Line Graph of Brake Status":
                             if 'Brake_Status' in df.columns and 'Timestamp' in df.columns:
                                 fig = go.Figure()
-                                
+
                                 fig.add_trace(go.Scatter(
                                     x=df['Timestamp'],
                                     y=df['Brake_Status'],
@@ -961,7 +930,7 @@ if df is not None:
                                     line=dict(width=3, color='royalblue'),
                                     name='حالة الفرامل'
                                 ))
-                                
+
                                 fig.update_layout(
                                     title="حالة الفرامل",
                                     xaxis_title="الوقت",
@@ -970,10 +939,10 @@ if df is not None:
                                     height=400,
                                     xaxis=dict(tickangle=45)
                                 )
-                                
+
                                 fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
                                 fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
-                                
+
                                 st.plotly_chart(fig, use_container_width=True)
                             else:
                                 st.error("عمود Brake_Status غير موجود في البيانات")
@@ -981,7 +950,7 @@ if df is not None:
                         elif chart_name == "16. Line Graph of Tire Pressure":
                             if 'Tire_Pressure_psi' in df.columns and 'Timestamp' in df.columns:
                                 fig = go.Figure()
-                                
+
                                 fig.add_trace(go.Scatter(
                                     x=df['Timestamp'],
                                     y=df['Tire_Pressure_psi'],
@@ -990,7 +959,7 @@ if df is not None:
                                     line=dict(width=3, color='indigo'),
                                     name='ضغط الإطارات'
                                 ))
-                                
+
                                 fig.update_layout(
                                     title="ضغط إطارات المركبة",
                                     xaxis_title="الوقت",
@@ -999,10 +968,10 @@ if df is not None:
                                     height=400,
                                     xaxis=dict(tickangle=45)
                                 )
-                                
+
                                 fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
                                 fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
-                                
+
                                 st.plotly_chart(fig, use_container_width=True)
                             else:
                                 st.error("عمود Tire_Pressure_psi غير موجود في البيانات")
@@ -1010,7 +979,7 @@ if df is not None:
                         elif chart_name == "17. Line Graph of Ambient Temperature":
                             if 'Ambient_Temp_C' in df.columns and 'Timestamp' in df.columns:
                                 fig = go.Figure()
-                                
+
                                 fig.add_trace(go.Scatter(
                                     x=df['Timestamp'],
                                     y=df['Ambient_Temp_C'],
@@ -1019,7 +988,7 @@ if df is not None:
                                     line=dict(width=3, color='goldenrod'),
                                     name='درجة الحرارة المحيطة'
                                 ))
-                                
+
                                 fig.update_layout(
                                     title="درجة الحرارة المحيطة بالمركبة",
                                     xaxis_title="الوقت",
@@ -1028,10 +997,10 @@ if df is not None:
                                     height=400,
                                     xaxis=dict(tickangle=45)
                                 )
-                                
+
                                 fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
                                 fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='lightgrey')
-                                
+
                                 st.plotly_chart(fig, use_container_width=True)
                             else:
                                 st.error("عمود Ambient_Temp_C غير موجود في البيانات")
@@ -1040,18 +1009,17 @@ if df is not None:
 
         else:
             st.info("--Choose the charts you want to view--")
-                            
+
     except Exception as e:
         st.error(f"خطأ: {str(e)}")
 
 else:
     st.markdown("<div style='text-align: center; padding: 3rem;'>", unsafe_allow_html=True)
-    # st.markdown("### CSV لعرض لوحة البيانات")
     st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("""
     <div style="background-color: #34495e; padding: 1rem; border-radius: 10px; color: white; text-align: center; margin-top: 2rem;">
-        <p> 2025 | Teem OHI | Vehicle Dashboard | Vehicle Charts ©</p>
+        <p>2025 | Teem OHI | Vehicle Dashboard | Vehicle Charts ©</p>
     </div>
     """, unsafe_allow_html=True)
 #---------------------------------------------------------------------

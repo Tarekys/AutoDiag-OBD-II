@@ -2,13 +2,14 @@ plotly
 numpy
 pandas
 xgboost
+scikit-learn
 joblib
 DateTime
 matplotlib
 seaborn
-scikit-learn
 IO
 streamlit
 db-sqlite3
 fastapi
 uvicorn
+requests

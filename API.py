@@ -1,22 +1,14 @@
-from fastapi import FastAPI, UploadFile, File
-from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
-import numpy as np
-import io
 from predictor import preprocess_and_predict_from_df
-
-from pydantic import BaseModel
-from typing import List, Dict, Any
-import joblib
-
-
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -24,22 +16,29 @@ app.add_middleware(
 
 @app.get("/")
 def home():
-    return {"message": " API جاهز لاستقبال البيانات وتحليل الأعطال"}
+    return {"message": "API جاهز لاستقبال البيانات وتحليل الأعطال"}
 
 @app.post("/predict/")
 async def predict(file: UploadFile = File(...)):
     try:
-        # قراءة الملف إلى DataFrame
+        if not file.filename.endswith('.csv'):
+            raise HTTPException(status_code=400, detail="الملف يجب أن يكون بصيغة CSV")
+
         df = pd.read_csv(file.file)
 
+
+        if df.empty:
+            raise HTTPException(status_code=400, detail="الملف فارغ")
+            
         predictions, df_with_results = preprocess_and_predict_from_df(df)
-        
+
+        # التحقق من نجاح التنبؤ
         if predictions is None:
-            return {"error": "حدث خطأ أثناء التنبؤ"}
-        
+            raise HTTPException(status_code=500, detail="حدث خطأ أثناء التنبؤ")
+            
         return {
             "status": "success",
             "results": df_with_results.to_dict(orient="records")
         }
     except Exception as e:
-        return {"error": f"فشل في معالجة الملف: {str(e)}"}
+        raise HTTPException(status_code=500, detail=f"فشل في معالجة الملف: {str(e)}")

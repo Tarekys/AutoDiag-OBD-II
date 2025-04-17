@@ -16,4 +16,4 @@ This project predicts car faults using an XGBoost model. It includes a Streamlit
 3. Run the app: `streamlit run streamlit.App.py`.
 
 ## Deployment
-Deployed on Railway: [link-to-your-app]
+Deployed on Railway

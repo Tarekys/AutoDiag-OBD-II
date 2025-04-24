@@ -32,7 +32,6 @@ async def predict(file: UploadFile = File(...)):
             
         predictions, df_with_results = preprocess_and_predict_from_df(df)
 
-        # التحقق من نجاح التنبؤ
         if predictions is None:
             raise HTTPException(status_code=500, detail="حدث خطأ أثناء التنبؤ")
             

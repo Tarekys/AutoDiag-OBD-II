@@ -7,8 +7,8 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 from datetime import datetime
 
-# تحديد عنوان الـ API (سيتم ضبطه لاحقًا على Railway)
-FASTAPI_URL = os.getenv("FASTAPI_URL", "http://127.0.0.1:8000/predict/")
+
+FASTAPI_URL = os.getenv("FASTAPI_URL", "*******")
 
 # Streamlit configuration
 st.set_page_config(
@@ -18,7 +18,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# CSS (نفس التنسيقات بدون تغيير)
+# CSS 
 st.markdown("""
 <style>
     .main {
@@ -289,7 +289,6 @@ if uploaded_file is not None:
                     else:
                         filtered_df = df
 
-                    # عرض النتائج
                     if not filtered_df.empty:
                         table_data = []
                         for idx, row in filtered_df.iterrows():
@@ -328,7 +327,6 @@ if uploaded_file is not None:
         except Exception as e:
             st.error(f"❌ حدث خطأ أثناء إرسال الملف أو المعالجة: {str(e)}")
 
-# معالجة الرسوم البيانية فقط إذا كان df موجودًا
 if df is not None:
     try:
         # تحويل الوقت إلى تنسيق التاريخ

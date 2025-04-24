@@ -68,20 +68,19 @@ def preprocess_and_predict_from_df(original_data):
         save_to_database(original_data)
         print("تم حفظ النتائج بنجاح.")
         
-        # إحصائيات سريعة
         fault_counts = {}
         for p in predictions:
             fault_name = PREDICTION_LABELS.get(p, 'Unknown')
             fault_counts[fault_name] = fault_counts.get(fault_name, 0) + 1
         
-        print("\nملخص نتائج التنبؤ:")
+        print("\nSummary of results:")
         for fault, count in fault_counts.items():
             print(f"- {fault}: {count} ({count/len(predictions)*100:.1f}%)")
         
         return predictions, original_data
 
     except Exception as e:
-        print(f"حدث خطأ أثناء التنبؤ: {str(e)}")
+        print(f"Error prediction: {str(e)}")
         import traceback
         traceback.print_exc()  
         return None, None

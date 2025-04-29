@@ -16,28 +16,28 @@ app.add_middleware(
 
 @app.get("/")
 def home():
-    return {"message": "API جاهز لاستقبال البيانات وتحليل الأعطال"}
+    return {"message": "API Ready to receive data and analyze faults "}
 
 @app.post("/predict/")
 async def predict(file: UploadFile = File(...)):
     try:
         if not file.filename.endswith('.csv'):
-            raise HTTPException(status_code=400, detail="الملف يجب أن يكون بصيغة CSV")
+            raise HTTPException(status_code=400, detail="File must be CSV format")
 
         df = pd.read_csv(file.file)
 
 
         if df.empty:
-            raise HTTPException(status_code=400, detail="الملف فارغ")
+            raise HTTPException(status_code=400, detail="empty file")
             
         predictions, df_with_results = preprocess_and_predict_from_df(df)
 
         if predictions is None:
-            raise HTTPException(status_code=500, detail="حدث خطأ أثناء التنبؤ")
+            raise HTTPException(status_code=500, detail="An error occurred during prediction")
             
         return {
             "status": "success",
             "results": df_with_results.to_dict(orient="records")
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"فشل في معالجة الملف: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Errors: {str(e)}")

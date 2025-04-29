@@ -263,7 +263,6 @@ with col2:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# التحقق من رفع الملف
 df = None
 if uploaded_file is not None:
     with st.spinner("🔄 جاري إرسال الملف ومعالجته عبر API..."):
@@ -373,7 +372,7 @@ if df is not None:
                     with cols[i]:
                         st.markdown(f'<div class="chart-container"><h3>{chart_name}</h3>', unsafe_allow_html=True)
 
-                        # الرسم البياني حسب النوع
+                        # Charts types
                         if chart_name == "1. Histogram of Engine RPM":
                             if 'Engine_RPM' in df.columns:
                                 rpm_threshold = 6000

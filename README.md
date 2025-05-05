@@ -17,7 +17,7 @@ Real-Time Car Fault Prediction System, a robust machine learning-based solution 
 ```
 ├── API.py              # FastAPI endpoint for predictions
 ├── Procfile            # The configuration for deployment
-├── app.py              # Main application script
+├── app.py              # Main Integrated application script
 ├── car_fault_classifier.json  # Trained model configuration
 ├── encoders.pkl        # Encoded data for preprocessing
 ├── feature_columns.pkl # Feature set metadata

@@ -2,7 +2,10 @@
 
 ## Overview
 
-Real-Time Car Fault Prediction System, a robust machine learning-based solution designed to predict vehicle faults using real-time data such as engine RPM, tire pressure, and other diagnostic metrics. This project leverages advanced algorithms and a user-friendly interface dashboard to provide actionable insights for automotive maintenance.
+Real-Time Car Fault Prediction System Version 1, a robust machine learning-based solution designed to predict vehicle faults using real-time data such as engine RPM, tire pressure, and other diagnostic metrics. This project leverages advanced algorithms and a user-friendly interface dashboard to provide actionable insights for automotive maintenance.
+
+![Car-fault-prediction Demo](assets/UI.png)
+![Car-fault-prediction Demo](assets/Charts.png)
 
 ## Features
 

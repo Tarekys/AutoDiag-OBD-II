@@ -22,6 +22,7 @@ Real-Time Car Fault Prediction System, a robust machine learning-based solution 
 ├── encoders.pkl        # Encoded data for preprocessing
 ├── feature_columns.pkl # Feature set metadata
 ├── predictor.py        # Prediction logic
+├── Visualization.py    # Create charts for features
 ├── requirements.txt    # Project dependencies
 ├── utilize.py          # Helpers functions
 ```

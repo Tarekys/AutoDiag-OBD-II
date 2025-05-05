@@ -267,11 +267,10 @@ df = None
 if uploaded_file is not None:
     with st.spinner("🔄 جاري إرسال الملف ومعالجته عبر API..."):
         try:
-            # إرسال الملف إلى الـ API
+            
             files = {'file': (uploaded_file.name, uploaded_file, 'text/csv')}
             response = requests.post(FASTAPI_URL, files=files)
 
-            # التحقق من استجابة الـ API
             if response.status_code == 200:
                 result = response.json()
                 if result.get("status") == "success":
@@ -328,7 +327,6 @@ if uploaded_file is not None:
 
 if df is not None:
     try:
-        # تحويل الوقت إلى تنسيق التاريخ
         if 'Timestamp' in df.columns:
             try:
                 df['Timestamp'] = pd.to_datetime(df['Timestamp'])
@@ -342,7 +340,7 @@ if df is not None:
 
         selected_charts = {}
 
-        col_count = 3  # عدد الأعمدة في كل صف
+        col_count = 3
         chart_items = list(chart_descriptions.items())
         rows = [chart_items[i:i+col_count] for i in range(0, len(chart_items), col_count)]
 
@@ -371,8 +369,9 @@ if df is not None:
                 for i, chart_name in enumerate(row):
                     with cols[i]:
                         st.markdown(f'<div class="chart-container"><h3>{chart_name}</h3>', unsafe_allow_html=True)
-
-                        # Charts types
+                        
+#----------------------------------------------------------------------------------------------------------
+# Charts types                       
                         if chart_name == "1. Histogram of Engine RPM":
                             if 'Engine_RPM' in df.columns:
                                 rpm_threshold = 6000

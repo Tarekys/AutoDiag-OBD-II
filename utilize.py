@@ -5,7 +5,6 @@ import joblib
 
 def fill_missing(data, strategy_numeric='auto', save_indicators=False):
     """
-    ملء القيم المفقودة في البيانات مع إضافة أعمدة تشير إلى القيم المفقودة (اختياري).
 
     """
     for col in data.columns:
@@ -13,14 +12,13 @@ def fill_missing(data, strategy_numeric='auto', save_indicators=False):
             continue
 
         try:
-            # إضافة عمود مؤشر للقيم المفقودة (إذا طُلب)
             if save_indicators:
                 data[f'is_missing_{col}'] = data[col].isnull().astype(int)
 
             # معالجة الأعمدة الرقمية
             if data[col].dtype in ['float64', 'int64', 'bool']:
                 if strategy_numeric == 'auto':
-                    # اختيار median إذا كان التوزيع منحرفًا
+                    # median 
                     skew_value = data[col].skew()
                     if pd.notna(skew_value) and skew_value > 1:
                         data[col] = data[col].fillna(data[col].median())
@@ -39,7 +37,7 @@ def fill_missing(data, strategy_numeric='auto', save_indicators=False):
                 if not mode_val.empty:
                     data[col] = data[col].fillna(mode_val[0])
                 else:
-                    data[col] = data[col].fillna('Unknown')  # قيمة افتراضية إذا لم يكن هناك mode
+                    data[col] = data[col].fillna('Unknown')
 
         except Exception as e:
             print(f"خطأ في معالجة العمود {col}: {str(e)}")
@@ -57,7 +55,7 @@ def encode_categorical_columns(data, encoders_path=None):
 
     try:
         if encoders_path:
-            # تحميل المحولات المحفوظة
+            # download encoders
             label_encoders = joblib.load(encoders_path)
             binary_cols = [col for col in label_encoders.keys() if col != 'onehot_encoder' and col != 'onehot_columns']
             multi_cols = label_encoders.get('onehot_columns', [])
@@ -83,7 +81,7 @@ def encode_categorical_columns(data, encoders_path=None):
                 try:
                     encoded_data[col] = le.transform(encoded_data[col])
                 except ValueError:
-                    print(f"تحذير: القيم في العمود {col} تحتوي على قيم جديدة غير موجودة في التدريب")
+                    print(f"Warning: The values ​​in column {col} contain new values ​​not found in training")
                     encoded_data[col] = encoded_data[col].map(lambda x: x if x in le.classes_ else le.classes_[0])
                     encoded_data[col] = le.transform(encoded_data[col])
             else:
@@ -110,14 +108,11 @@ def encode_categorical_columns(data, encoders_path=None):
                 label_encoders['onehot_encoder'] = onehot_encoder
                 label_encoders['onehot_columns'] = multi_cols
 
-            # إنشاء DataFrame للبيانات المحولة
             onehot_df = pd.DataFrame(onehot_encoded, columns=onehot_cols, index=encoded_data.index)
-
-            # إزالة الأعمدة الأصلية ودمج البيانات المحولة
             encoded_data = encoded_data.drop(columns=multi_cols)
             encoded_data = pd.concat([encoded_data, onehot_df], axis=1)
 
-        # حفظ المحولات فقط في وضع التدريب (عندما لا يتم تمرير encoders_path)
+
         if not encoders_path:
             joblib.dump(label_encoders, 'encoders.pkl')
             print("تم حفظ المحولات باسم 'encoders.pkl'")

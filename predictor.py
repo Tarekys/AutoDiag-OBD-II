@@ -66,7 +66,6 @@ def preprocess_and_predict_from_df(original_data):
         # Save the predictions to database
         print("جاري حفظ النتائج في قاعدة البيانات...")
         save_to_database(original_data)
-        print("تم حفظ النتائج بنجاح.")
         
         fault_counts = {}
         for p in predictions:
@@ -85,7 +84,7 @@ def preprocess_and_predict_from_df(original_data):
         traceback.print_exc()  
         return None, None
 
-# SQLite
+# SQLite--PostgreSql
 def save_to_database(df):
     conn = sqlite3.connect(DB_PATH)
     df.to_sql(TABLE_NAME, conn, if_exists='append', index=False)

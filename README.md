@@ -1,8 +1,4 @@
 
-![Car-fault-prediction Demo](assets/UI.png)
-![Car-fault-prediction Demo](assets/Charts.png)
-
-
 # Car Fault Prediction using OBD-II Data (Graduation Project)
 
 An AI-powered system for real-time prediction and detection of car faults using OBD-II data streams.  
@@ -10,6 +6,7 @@ This project combines machine learning, data visualization, and real-time APIs t
 
 > 🏆 Graded A+ in our graduation evaluation.
 
+![Car-fault-prediction Demo](assets/dashboard0.png)
 ---
 
 ## Introduction
@@ -51,7 +48,7 @@ The project aims to create an intelligent automotive assistant that predicts veh
 - It analyzes the data in real time using a trained **machine learning model (XGBoost)**.
 - If an issue is detected, it **stores the result**, **displays it on a dashboard**, and **sends an alert to the driver’s phone**.
 - The mobile app integrates everything: **dashboard + chatbot assistant** for mechanical inquiries.
-
+  
 ---
 
 ## 📁 Project Structure

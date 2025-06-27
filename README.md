@@ -102,7 +102,7 @@ CAR-FAULT-PREDICTION-OBD-II/
 - **Input Features:** 16 OBD-II signals (e.g., RPM, Temp, Pressure)
 - **Output Classes:** Normal, Engine Fault, Transmission Fault, etc.
 - **Preprocessing:** LabelEncoding, Feature Ordering
-- **Performance:** 90%+ accuracy on test set
+- **Performance:** 97%+ accuracy on test set
 
 ---
 

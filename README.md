@@ -75,7 +75,7 @@ CAR-FAULT-PREDICTION-OBD-II/
 │   └──  Dockerfile
 │
 ├── Chatbot/                   # Future chatbot support (LLM assistant)
-                               # Mechanic specializing in fine tuning<Unsloth>
+                               # Mechanic specializing in fine-tuning Qwen2.5B <Unsloth>
 └──Mobile App/                 # Mobile app interface (Flutter/React Native)
    └── Allows full control of the system from a smartphone, including chatbots, payment, and turning the device ON and OFF - OBD-II ELM 327 device.
 ```

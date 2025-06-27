@@ -55,7 +55,7 @@ The project aims to create an intelligent automotive assistant that predicts veh
 
 ```bash
 CAR-FAULT-PREDICTION-OBD-II/
-│
+├── Hardware: OBD-II ELM327 device
 ├── API and Prediction/                        # Backend API using FastAPI
 │   ├── API.py                 # Main FastAPI app with endpoints
 │   ├── predictor.py           # ML prediction logic

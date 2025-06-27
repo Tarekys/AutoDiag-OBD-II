@@ -56,7 +56,7 @@ The project aims to create an intelligent automotive assistant that predicts veh
 ```bash
 CAR-FAULT-PREDICTION-OBD-II/
 │
-├── API/                        # Backend API using FastAPI
+├── API and Prediction/                        # Backend API using FastAPI
 │   ├── API.py                 # Main FastAPI app with endpoints
 │   ├── predictor.py           # ML prediction logic
 │   ├── SQLite.py              
@@ -67,7 +67,7 @@ CAR-FAULT-PREDICTION-OBD-II/
 │   ├── Dockerfile
 │   └── .env
 │
-├── UI and Prediction/         # Frontend using Streamlit/HTML/CSS
+├── UI/                        # Frontend using Streamlit/HTML/CSS
 │   ├── Fault-Dashboard.py     # Main dashboard interface
 │   ├── charts_module.py       # Charts & visualization logic
 │   ├── pages/                 # Optional sub-pages for Streamlit

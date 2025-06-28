@@ -7,6 +7,8 @@ This project combines machine learning, data visualization, and real-time APIs t
 > 🏆 Graded A+ in our graduation evaluation.
 
 ![Car-fault-prediction Demo](assets/dashboard0.png)
+
+![Car-fault-prediction Demo](assets/SMS_Alert.jpg) 
 ---
 
 ## Introduction

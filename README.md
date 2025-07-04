@@ -8,9 +8,8 @@ This project combines machine learning, data visualization, and real-time APIs t
 
 ![Car-fault-prediction Demo](assets/dashboard0.png)
 
-![Car-fault-prediction Demo](assets/SMS_Notification.jpg) 
+![Car-fault-prediction Demo](assets/SMS_🔔.jpg) 
 
-![Car-fault-prediction Demo](assets/Mobile_App.jpg) 
 ---
 
 ## Introduction
@@ -52,7 +51,11 @@ The project aims to create an intelligent automotive assistant that predicts veh
 - It analyzes the data in real time using a trained **machine learning model (XGBoost)**.
 - If an issue is detected, it **stores the result**, **displays it on a dashboard**, and **sends an alert to the driver’s phone**.
 - The mobile app integrates everything: **dashboard + chatbot assistant** for mechanical inquiries.
-  
+---
+![Car-fault-prediction Demo](assets/66.png) 
+![Car-fault-prediction Demo](assets/67.png) 
+![Car-fault-prediction Demo](assets/68.png) 
+![Car-fault-prediction Demo](assets/LLM.png) 
 ---
 
 ## 📁 Project Structure

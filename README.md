@@ -1,5 +1,5 @@
 
-# Car Fault Prediction using OBD-II ELM 327 (Graduation Project)
+# Car Fault Prediction using OBD-II ELM 327 (Graduation Project) Graded A+
 
 An AI-powered system for real-time prediction and detection of car faults using OBD-II data streams.  
 This project combines machine learning, data visualization, and real-time APIs to deliver an early warning system for vehicle malfunctions.

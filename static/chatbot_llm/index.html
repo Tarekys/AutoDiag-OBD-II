@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoSense - الميكانيكي الذكي</title>
+    
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- FontAwesome -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/854/854894.png" />
+
+    <style>
+        /* Scrollbar */
+        .chat-container::-webkit-scrollbar {
+            width: 10px;
+        }
+        .chat-container::-webkit-scrollbar-track {
+            background: #2d3748;
+            border-radius: 5px;
+        }
+        .chat-container::-webkit-scrollbar-thumb {
+            background: #4a5568;
+            border-radius: 5px;
+        }
+        .chat-container::-webkit-scrollbar-thumb:hover {
+            background: #718096;
+        }
+
+        /* Lists */
+        .message-content ul, .message-content ol {
+            margin: 0.5rem 0;
+            padding-right: 1.5rem;
+        }
+        .message-content ul li {
+            list-style-type: disc;
+        }
+        .message-content ol li {
+            list-style-type: decimal;
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .message {
+            animation: fadeIn 0.3s ease-in;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-900 to-blue-900 text-white min-h-screen flex flex-col">
+    <div class="container mx-auto p-6 flex-grow flex flex-col max-w-3xl">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-extrabold text-blue-300 drop-shadow-lg">AutoSense</h1>
+            <p class="text-gray-300 mt-3 text-lg">مساعد ذكي لفهم مشاكل سيارتك</p>
+        </header>
+
+        <!-- Chat -->
+        <div id="chat-container" class="flex-grow bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-2xl p-6 overflow-y-auto mb-6 border border-gray-700">
+            <div id="messages" class="space-y-4"></div>
+        </div>
+
+        <!-- Input -->
+        <div class="flex gap-3 items-center">
+            <input id="message-input" type="text" placeholder="اكتب سؤالك هنا..." 
+                   class="flex-1 p-4 bg-gray-700/80 border border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 text-white placeholder-gray-400 transition-all duration-300">
+            <button id="send-button" 
+                    class="bg-blue-500 text-white p-4 rounded-xl hover:bg-blue-600 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        const messagesDiv = document.getElementById('messages');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+
+        // ✅api in Docker
+        const apiUrl = '*****************';
+        let sessionId = null;
+
+        function formatText(text) {
+            const lines = text.split('\n').filter(line => line.trim());
+            let html = '';
+            let inList = false;
+            let listType = null;
+            let listItems = [];
+
+            lines.forEach((line, index) => {
+                line = line.trim();
+                if (line.match(/^[\*\-\•]\s+/)) {
+                    if (!inList || listType !== 'ul') {
+                        if (inList) html += listType === 'ul' ? '</ul>' : '</ol>';
+                        inList = true; listType = 'ul'; listItems = [];
+                    }
+                    listItems.push(`<li>${line.replace(/^[\*\-\•]\s+/, '')}</li>`);
+                }
+                else if (line.match(/^\d+[\.\-]\s+/)) {
+                    if (!inList || listType !== 'ol') {
+                        if (inList) html += listType === 'ul' ? '</ul>' : '</ol>';
+                        inList = true; listType = 'ol'; listItems = [];
+                    }
+                    listItems.push(`<li>${line.replace(/^\d+[\.\-]\s+/, '')}</li>`);
+                }
+                else {
+                    if (inList) {
+                        html += listType === 'ul' ? `<ul>${listItems.join('')}</ul>` : `<ol>${listItems.join('')}</ol>`;
+                        inList = false; listType = null; listItems = [];
+                    }
+                    html += `<p>${line}</p>`;
+                }
+            });
+            if (inList) html += listType === 'ul' ? `<ul>${listItems.join('')}</ul>` : `<ol>${listItems.join('')}</ol>`;
+            return `<div class="message-content">${html}</div>`;
+        }
+
+        function addMessage(sender, text, bgClass, isLoading = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message p-4 rounded-xl ${bgClass} max-w-[80%] ${sender === 'User' ? 'mr-2 ml-auto' : 'ml-2 mr-auto'} shadow-md`;
+            const formattedText = sender === 'Assistant' && !isLoading ? formatText(text) : text;
+            messageDiv.innerHTML = `<strong class="block mb-1 text-sm ${sender === 'User' ? 'text-blue-200' : 'text-green-200'}">${sender}:</strong> ${formattedText}`;
+            if (isLoading) {
+                messageDiv.id = 'loading-message';
+                messageDiv.innerHTML = `<div class="flex items-center"><i class="fas fa-spinner fa-spin mr-2"></i> جارٍ المعالجة...</div>`;
+            }
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        addMessage('Assistant', 'أهلاً بك! أنا مساعد ذكي متخصص في الميكانيكا والسيارات. اكتب سؤالك حول الصيانة، الأعطال، أو قطع الغيار.', 'bg-green-700/80');
+
+        async function startSession() {
+            try {
+                const response = await fetch(`${apiUrl}/start_session`);
+                const data = await response.json();
+                if (data.session_id) sessionId = data.session_id;
+                else addMessage('Error', 'فشل بدء الجلسة', 'bg-red-600');
+            } catch (error) {
+                addMessage('Error', 'فشل الاتصال بالخادم: ' + error.message, 'bg-red-600');
+            }
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+            addMessage('User', message, 'bg-blue-600/80');
+            messageInput.value = ''; sendButton.disabled = true;
+            addMessage('Assistant', '', 'bg-gray-600/80', true);
+
+            try {
+                const response = await fetch(`${apiUrl}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message, session_id: sessionId })
+                });
+                const data = await response.json();
+                document.getElementById('loading-message')?.remove();
+                if (data.response) {
+                    sessionId = data.session_id;
+                    addMessage('Assistant', data.response, 'bg-green-700/80');
+                } else {
+                    addMessage('Error', data.error || 'حدث خطأ غير معروف', 'bg-red-600');
+                }
+            } catch (error) {
+                document.getElementById('loading-message')?.remove();
+                addMessage('Error', 'فشل الاتصال بالخادم: ' + error.message, 'bg-red-600');
+            }
+            sendButton.disabled = false;
+            messageInput.focus();
+        }
+
+        window.onload = startSession;
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+    </script>
+</body>
+</html>

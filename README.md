@@ -76,15 +76,15 @@ AutoDiag-OBD-II/
 
 ---
 
-## 🔄 Data Flow Overview
+## Data Flow Overview
 
-1. 🚗 OBD-II Data is received from car sensors.
-2. 📤 Sent to FastAPI via `/predict` endpoint.
-3. 🤖 Processed by prediction service using trained ML model.
-4. 📥 Results stored in SQLite database.
-5. 📲 If fault is detected, a **notification is sent to the user's mobile**.
-6. 📈 Displayed in real-time using Streamlit dashboard.
-7. 💬 User can chat with the chatbot via mobile app for clarification.
+1. OBD-II Data is received from car sensors.
+2. Sent to FastAPI via `/predict` endpoint.
+3. Processed by prediction service using trained ML model.
+4. Results stored in SQLite database.
+5. If fault is detected, a **notification is sent to the user's mobile**.
+6. Displayed in real-time using Streamlit dashboard.
+7. User can chat with the chatbot via mobile app for clarification.
 
 ---
 

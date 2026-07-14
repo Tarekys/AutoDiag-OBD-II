@@ -1,23 +1,29 @@
 # Car Fault Prediction System
 
-Production-organized graduation project for vehicle fault prediction using OBD-II data, FastAPI, Streamlit, SQLite, and an XGBoost model.
+![Car-fault-prediction Demo](assets/dashboard0.png)
 
-## Overview
+![Car-fault-prediction Demo](assets/SMS_🔔.jpg)
 
-This system simulates or receives vehicle telemetry, preprocesses the input, predicts the most likely fault class with a trained XGBoost classifier, stores prediction results in SQLite, and exposes the output through a FastAPI backend and a Streamlit dashboard.
+---
 
-## Tech Stack
+## Introduction
 
-- Python
-- FastAPI
-- Streamlit
-- XGBoost
-- scikit-learn
-- SQLite
-- Plotly
-- Twilio
+This is a complete system for real-time vehicle fault diagnosis using **OBD-II data**, **Machine Learning (XGBoost)**, and **mobile integration**.
 
-## Project Structure
+- It connects to your car via an **OBD-II ELM327** device.
+- It analyzes the data in real time using a trained **machine learning model (XGBoost)**.
+- If an issue is detected, it **stores the result**, **displays it on a dashboard**, and **sends an alert to the driver’s phone**.
+- The mobile app integrates everything: **dashboard + chatbot assistant** for mechanical inquiries.
+
+---
+
+![Car-fault-prediction Demo](assets/66.png)
+![Car-fault-prediction Demo](assets/67.png)
+![Car-fault-prediction Demo](assets/68.png)
+![Car-fault-prediction Demo](assets/LLM.png)
+---
+
+## 📁 Project Structure
 
 ```text
 AutoDiag-OBD-II/
@@ -44,7 +50,47 @@ AutoDiag-OBD-II/
 └── README.md
 ```
 
-## Environment Variables
+---
+
+## 🚀 Features
+
+- 🔌 **Real-time OBD-II Data Processing**
+- 🤖 **AI Fault Prediction** using XGBoost classifier
+- 📊 **Interactive UI** to visualize sensor data and fault alerts
+- 🛠️ **Fault Database** to store all predictions historically
+- 🌐 **RESTful API** for integration with any platform
+- 📱 **Mobile App with Push Notifications** on fault detection
+- 💬 **Built-in Chatbot** for user Q&A and mechanic guidance
+- 🐳 **Dockerized** for clean deployment and portability
+
+---
+
+## 🧠 Model Details
+
+- **Model Type:** `XGBoost Classifier`
+- **Task:** Multi-class classification of fault types
+- **Input Features:** 16 OBD-II signals (e.g., RPM, Temp, Pressure)
+- **Output Classes:** Normal, Engine Fault, Transmission Fault, etc.
+- **Preprocessing:** LabelEncoding, Feature Ordering
+- **Performance:** 97%+ accuracy on test set
+
+---
+
+## 🔄 Data Flow Overview
+
+1. 🚗 OBD-II Data is received from car sensors.
+2. 📤 Sent to FastAPI via `/predict` endpoint.
+3. 🤖 Processed by prediction service using trained ML model.
+4. 📥 Results stored in SQLite database.
+5. 📲 If fault is detected, a **notification is sent to the user's mobile**.
+6. 📈 Displayed in real-time using Streamlit dashboard.
+7. 💬 User can chat with the chatbot via mobile app for clarification.
+
+---
+
+## 🛠️ How to Run Locally
+
+### Environment Variables
 
 Copy `.env.example` to `.env` and update values as needed:
 
@@ -55,50 +101,65 @@ Copy `.env.example` to `.env` and update values as needed:
 - `TWILIO_MESSAGING_SERVICE_SID`
 - `TWILIO_PHONE_NUMBER`
 
-## Local Setup
+### 1. Clone the Repo
 
-1. Install dependencies:
+```bash
+git clone https://github.com/Tarekys/CAR-FAULT-PREDICTION-OBD-II.git
+cd CAR-FAULT-PREDICTION-OBD-II
+```
+
+### 2. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Run the API from the repository root:
+### 3. Run API (FastAPI)
 
 ```bash
 uvicorn --app-dir API API:app --reload
 ```
 
-3. Run the Streamlit dashboard from the repository root:
+### 4. Run UI (Streamlit)
 
 ```bash
 streamlit run UI/Fault-Dashboard.py
 ```
 
-## Docker
+---
 
-Build from the repository root so Docker can access the shared `src/`, `models/`, and `database/` folders.
+## Docker Instructions
 
-API:
+### Build and Run API
 
 ```bash
 docker build -f API/Dockerfile -t obd-api .
 docker run -p 8000:8000 obd-api
 ```
 
-UI:
+### Build and Run UI
 
 ```bash
 docker build -f UI/Dockerfile -t obd-ui .
 docker run -p 10000:10000 obd-ui
 ```
 
-Static chatbot prototype:
+### Build and Run Static Chatbot Prototype
 
 ```bash
 docker build -f static/chatbot_llm/Dockerfile -t obd-chatbot .
 docker run -p 8080:80 obd-chatbot
 ```
+
+---
+
+## References
+
+- Chen, T., & Guestrin, C. (2016). *XGBoost: A Scalable Tree Boosting System*.
+- Maklin, C. (2022). *Data Cleaning and Preprocessing for ML*.
+- OBD-II Standard Docs
+
+---
 
 ## Notes
 

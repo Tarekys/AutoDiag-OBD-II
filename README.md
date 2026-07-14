@@ -17,13 +17,7 @@ This is a complete system for real-time vehicle fault diagnosis using **OBD-II d
 
 ---
 
-![Car-fault-prediction Demo](assets/66.png)
-![Car-fault-prediction Demo](assets/67.png)
-![Car-fault-prediction Demo](assets/68.png)
-![Car-fault-prediction Demo](assets/LLM.png)
----
-
-## 📁 Project Structure
+## Project Structure
 
 ```text
 AutoDiag-OBD-II/
@@ -52,20 +46,20 @@ AutoDiag-OBD-II/
 
 ---
 
-## 🚀 Features
+## Features
 
-- 🔌 **Real-time OBD-II Data Processing**
-- 🤖 **AI Fault Prediction** using XGBoost classifier
-- 📊 **Interactive UI** to visualize sensor data and fault alerts
-- 🛠️ **Fault Database** to store all predictions historically
-- 🌐 **RESTful API** for integration with any platform
-- 📱 **Mobile App with Push Notifications** on fault detection
-- 💬 **Built-in Chatbot** for user Q&A and mechanic guidance
-- 🐳 **Dockerized** for clean deployment and portability
+-  **Real-time OBD-II Data Processing**
+-  **AI Fault Prediction** using XGBoost classifier
+-  **Interactive UI** to visualize sensor data and fault alerts
+-  **Fault Database** to store all predictions historically
+-  **RESTful API** for integration with any platform
+-  **Mobile App with Push Notifications** on fault detection
+-  **Built-in Chatbot** for user Q&A and mechanic guidance
+-  **Dockerized** for clean deployment and portability
 
 ---
 
-## 🧠 Model Details
+##  Model Details
 
 - **Model Type:** `XGBoost Classifier`
 - **Task:** Multi-class classification of fault types
@@ -88,7 +82,7 @@ AutoDiag-OBD-II/
 
 ---
 
-## 🛠️ How to Run Locally
+## How to Run Locally
 
 ### Environment Variables
 
